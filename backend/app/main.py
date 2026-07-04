@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
-from app.api.routes import approvals, categories, dashboard, duplicates, files, health, ollama, operations, watch_folders
+
+from app.api.routes import categories, dashboard, files, health, ollama, operations, watch_folders
 from app.core.config import get_settings
 from app.core.database import Base, SessionLocal, engine
 from app.models.entities import Category
@@ -26,16 +27,20 @@ DEFAULT_CATEGORIES = [
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.app_name, version="0.1.0")
-    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(health.router, prefix="/api")
     app.include_router(ollama.router, prefix="/api")
     app.include_router(watch_folders.router, prefix="/api")
     app.include_router(files.router, prefix="/api")
     app.include_router(categories.router, prefix="/api")
     app.include_router(operations.router, prefix="/api")
-    app.include_router(approvals.router, prefix="/api")
     app.include_router(dashboard.router, prefix="/api")
-    app.include_router(duplicates.router, prefix="/api")
 
     @app.on_event("startup")
     def startup() -> None:
@@ -47,6 +52,7 @@ def create_app() -> FastAPI:
                 if category_id not in existing:
                     db.add(Category(category_id=category_id, display_name=display_name, destination_template=template))
             db.commit()
+
     return app
 
 
