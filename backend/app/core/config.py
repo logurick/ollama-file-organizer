@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
+
     app_env: str = "development"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
@@ -28,6 +30,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     allowed_extensions: str = ".txt,.md,.csv,.json,.pdf,.docx,.xlsx"
     default_exclude_patterns: str = "~$*,*.tmp,*.temp,*.part,*.crdownload,*.download,.DS_Store,Thumbs.db,desktop.ini"
+
+    @property
+    def allowed_extension_set(self) -> set[str]:
+        return {item.strip().lower() if item.strip().startswith(".") else f".{item.strip().lower()}" for item in self.allowed_extensions.split(",") if item.strip()}
+
+    @property
+    def exclude_pattern_list(self) -> list[str]:
+        return [item.strip() for item in self.default_exclude_patterns.split(",") if item.strip()]
 
     @property
     def data_dir(self) -> Path:
